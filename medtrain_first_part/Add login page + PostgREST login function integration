@@ -1,0 +1,84 @@
+<script>
+    // 定义 PostgREST 基地址（根据你 docker-compose 的端口）
+    const API_BASE_URL = 'http://localhost:3000';
+
+    $(document).ready(function() {
+        // Toggle password visibility
+        $('#togglePassword').on('click', function() {
+            const passwordInput = $('#password');
+            const icon = $(this).find('i');
+            
+            if (passwordInput.attr('type') === 'password') {
+                passwordInput.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                passwordInput.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
+        
+        // Form submission
+        $('#loginForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const username = $('#username').val().trim();
+            const password = $('#password').val();
+            const rememberMe = $('#rememberMe').is(':checked'); // 现在暂时不用，先保留变量
+            
+            // Validate inputs
+            if (!username || !password) {
+                showLoginError('Please enter both username and password');
+                return;
+            }
+            
+            // Hide any previous errors
+            $('#loginAlert').addClass('d-none');
+            
+            // Disable submit button and show loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalBtnText = submitBtn.html();
+            submitBtn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Logging in...')
+                     .prop('disabled', true);
+            
+            //  使用 PostgREST 的 login_user 函数
+            $.ajax({
+                url: `${API_BASE_URL}/rpc/login_user`,
+                method: 'POST',
+                contentType: 'application/json',
+                dataType: 'json',
+                data: JSON.stringify({
+                    p_username: username,
+                    p_password: password
+                }),
+                success: function(response) {
+                    // PostgREST 有时返回对象，有时返回数组，这里都处理一下
+                    const user = Array.isArray(response) ? response[0] : response;
+
+                    if (user && user.id) {
+                        // 登录成功：把用户信息存到 localStorage
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+
+                        // 如果你在 Medical 项目里主页叫 simple-interface-prototype-fetch.html：
+                        // window.location.href = '../simple-interface-prototype-fetch.html';
+
+                        // 如果你现在项目主页就是 ../index.html：
+                        window.location.href = '../index.html';
+                    } else {
+                        showLoginError('Login failed. Please check your credentials and try again.');
+                        submitBtn.html(originalBtnText).prop('disabled', false);
+                    }
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseText || 'An error occurred while logging in. Please try again later.';
+                    showLoginError(msg);
+                    submitBtn.html(originalBtnText).prop('disabled', false);
+                }
+            });
+        });
+        
+        // Function to show login error
+        function showLoginError(message) {
+            $('#loginAlert').text(message).removeClass('d-none');
+        }
+    });
+</script>
