@@ -4,8 +4,25 @@ The Medical Device Training project aims to develop a digital tool that enhances
 
 The Medical Device Training System is a web-based platform designed to enhance traceability and efficiency in the training and certification process of medical devices.  
 It connects device-related risks, required skills, training materials, and trainee performance, ensuring that all identified risks are properly addressed through structured training and evaluation.
+## Team Members & Task Assignment
+
+| Member         | Role / Responsibility   | Description of Work                            | Status     |
+|----------------|-------------------------|-----------------------------------------------|------------|
+| Yu'feng Cai    | Frontend Development    | Page layout, UI implementation, component logic | In Progress |
+| Gongcheng Sun  | Backend Development     | API design, database schema, deployment        | In Progress |
+| Jiayin Zhang   | Documentation & Testing | Writing README, test cases, bug reports        | Completed  |
 
 ---
+
+
+## Work Plan (Task List)
+
+
+- [x] Implement user login page (Yu'feng Cai)
+- [x] Connect frontend to backend API (Yu'feng Cai & Gongcheng Sun)
+- [x] Design database schema for user data (Gongcheng Sun)
+- [x] Write test cases for login feature (Jiayin Zhang)
+- [x] Polish README and project documentation (Jiayin Zhang)
 
 ## Features
 
@@ -17,6 +34,7 @@ It connects device-related risks, required skills, training materials, and train
 - Web-based interface accessible through browsers  
 
 ---
+
 
 ## System Architecture
 
