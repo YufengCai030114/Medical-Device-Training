@@ -14,6 +14,16 @@ It connects device-related risks, required skills, training materials, and train
 
 ---
 
+##  Time Tracking Summary
+
+| Member         | Task                                | Date       | Hours | Status     | Notes                     |
+|----------------|--------------------------------------|------------|-------|------------|---------------------------|
+| Yu'feng Cai    | Backend database schema             | 2025-11-10 | 3.5     | Completed  | Finished initial UI       |
+| Yu'feng Cai    | UI bug fixes                         | 2025-11-11 | 2     | Completed  | Minor adjustments         |
+| Gongcheng Sun  | Frontend UI implementation          | 2025-11-10 | 3     | Completed  | Set up DB structure       |
+| Gongcheng Sun  | API endpoint development             | 2025-11-11 | 2.5     | Completed  | Added main API features   |
+| Jiayin Zhang   | Documentation writing                | 2025-11-10 | 2     | Completed  | Initial structure         |
+| Jiayin Zhang   | Documentation improvements           | 2025-11-11 | 2.5   | Completed  | Added assignment sections |
 
 ## Work Plan (Task List)
 
