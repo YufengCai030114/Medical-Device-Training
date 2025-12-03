@@ -108,8 +108,6 @@ The system consists of four main components:
    - Generates the risk–skill connection data structure based on backend queries.  
    - Provides formatted graph data that the frontend can render visually.
 
-### Architecture Diagram
-
 ```mermaid
 flowchart LR
     FE[Frontend UI] --> BE[Backend Java Server]
@@ -118,6 +116,7 @@ flowchart LR
     BE --> GM[Graph Module]
 
     GM --> FE
+
 ## 6.3 Backend Logic Flow
 
 The backend logic follows a simple and clear workflow, ensuring that every action performed in the frontend is processed consistently:
