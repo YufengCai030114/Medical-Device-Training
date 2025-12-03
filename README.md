@@ -1,94 +1,144 @@
-# Medical-Device-Training
-The Medical Device Training project aims to develop a digital tool that enhances traceability in the training and certification process of medical devices. The system connects risks, required skills, training materials, assessments, and trainee performance, ensuring that all identified risks are properly addressed through training and evaluation.
-# Medical Device Training System
+# 1. Project Overview
 
-The Medical Device Training System is a web-based platform designed to enhance traceability and efficiency in the training and certification process of medical devices.  
-It connects device-related risks, required skills, training materials, and trainee performance, ensuring that all identified risks are properly addressed through structured training and evaluation.
-## Team Members & Task Assignment
-
-| Member         | Role / Responsibility   | Description of Work                            | Status     |
-|----------------|-------------------------|-----------------------------------------------|------------|
-| Yu'feng Cai    | Frontend Development    | Page layout, UI implementation, component logic | In Progress |
-| Gongcheng Sun  | Backend Development     | API design, database schema, deployment        | In Progress |
-| Jiayin Zhang   | Documentation & Testing | Writing README, test cases, bug reports        | Completed  |
+The **Medical Device Training System** is a web-based platform designed to enhance **traceability**, **training effectiveness**, and **risk–skill linkage** in medical device education.  
+The system connects **device risks → required skills → training materials → assessments → trainee performance**, ensuring that every risk is covered by relevant training activities.
 
 ---
 
-##  Time Tracking Summary
+# 2. Team Members & Responsibilities
 
-| Member         | Task                                | Date       | Hours | Status     | Notes                     |
-|----------------|--------------------------------------|------------|-------|------------|---------------------------|
-| Yu'feng Cai    | Backend database schema             | 2025-11-10 | 3.5     | Completed  | Finished initial UI       |
-| Yu'feng Cai    | UI bug fixes                         | 2025-11-11 | 2     | Completed  | Minor adjustments         |
-| Gongcheng Sun  | Frontend UI implementation          | 2025-11-10 | 3     | Completed  | Set up DB structure       |
-| Gongcheng Sun  | API endpoint development             | 2025-11-11 | 2.5     | Completed  | Added main API features   |
-| Jiayin Zhang   | Documentation writing                | 2025-11-10 | 3     | Completed  | Initial structure         |
-| Jiayin Zhang   | Documentation improvements           | 2025-11-11 | 2.5   | Completed  | Added assignment sections |
-
-## Work Plan (Task List)
-
-
-- [x] Implement user login page (Yu'feng Cai)
-- [x] Connect frontend to backend API (Yu'feng Cai & Gongcheng Sun)
-- [x] Design database schema for user data (Gongcheng Sun)
-- [x] Write test cases for login feature (Jiayin Zhang)
-- [x] Polish README and project documentation (Jiayin Zhang)
-
-## Features
-
-- Digital training management: organize and track training sessions and certifications  
-- Traceability between risks, skills, and training materials  
-- Role-based system for administrators, trainers, and trainees  
-- Performance tracking and reporting  
-- Database integration for persistent data management  
-- Web-based interface accessible through browsers  
+| Member | Role | Responsibilities |
+|--------|-------|------------------|
+| **Yu'feng Cai** | Frontend Developer | UI implementation, page design, API connection |
+| **Gongcheng Sun** | Backend Developer & Graph Module Lead | API design, database schema, risk–skill graph, login/register |
+| **Jiayin Zhang** | Documentation & Testing | README writing, test cases, workflow documentation, bug reporting |
 
 ---
 
+# 3. Detailed Time Tracking (Estimation + Actual Time)
 
-## System Architecture
+## 3.1 Time Tracking Table
 
+| Member | Task | Date | Estimated (h) | Actual (h) | Status | Notes |
+|--------|------|--------|----------------|-------------|---------|--------|
+| **Yu'feng Cai** | UI layout setup | 2025-11-09 | 2.0 | 2.3 | Done | Initial framework |
+| Cai | UI refinement & bug fixes | 2025-11-10 | 1.5 | 1.7 | Done | Alignment fixed |
+| Cai | Frontend → Backend API integration | 2025-11-11 | 2.0 | 2.4 | Done | Login flow |
 
-- **Frontend:** Interactive web pages served to users  
-- **Backend:** Java server (`SimpleStaticServer.java`) handles HTTP requests and serves data  
-- **Database:** Stores users, training materials, results, and risk links  
+| **Gongcheng Sun** | Database schema design | 2025-11-09 | 2.0 | 2.2 | Done | User & training tables |
+| Sun | API endpoint implementation | 2025-11-10 | 2.5 | 2.7 | Done | REST endpoints |
+| Sun | Risk–Skill Graph development | 2025-11-11 | 2.0 | 2.6 | Done | Visualization logic |
 
----
-
-## Installation and Setup
-
-### Prerequisites
-Make sure you have:
-- **Java 8+** installed  
-- **A web browser** (Chrome, Edge, or Firefox)  
-- *(Optional)* A database installed (MySQL or SQLite)
-
-### Steps
-
-1. Clone or download this repository:
-   ```bash
-   git clone https://github.com/YufengCai030114/Medical-Device-Training.git
-javac SimpleStaticServer.java
-java SimpleStaticServer
-http://localhost:8080
-Medical-Device-Training/
-├── .idea/                      # IDE configuration files
-├── medtrain_first_part/        # Frontend (HTML, CSS, JS)
-├── out/                        # Compiled output
-├── SimpleStaticServer.java     # Backend server file
-├── README.md                   # Project documentation
-└── .gitignore                  # Git ignored files list
-## Team and Contribution
-
-| Name | Role | Description |
-|------|------|-------------|
-| Yufeng Cai | Developer | System design, backend implementation |
-| Gongcheng Sun | Developer | Frontend development, database design |
-| Jiayin Zhang | Developer | Interface optimization, documentation |
+| **Jiayin Zhang** | Initial documentation | 2025-11-09 | 1.5 | 1.8 | Done | Base README |
+| Zhang | Test cases (login) | 2025-11-10 | 2.0 | 2.1 | Done | Functional tests |
+| Zhang | Documentation improvement | 2025-11-11 | 2.0 | 2.4 | Done | Added workflow and tables |
 
 ---
 
-## License
+## 3.2 Total Hours Summary
 
-This project is developed for **academic and educational purposes** only.  
-All rights reserved © 2025 Yufeng Cai, Gongcheng Sun, and Jiayin Zhang.
+| Member | Estimated (h) | Actual (h) |
+|--------|----------------|-------------|
+| **Yu'feng Cai** | 5.5 | 6.4 |
+| **Gongcheng Sun** | 6.5 | 7.5 |
+| **Jiayin Zhang** | 5.5 | 6.3 |
+
+**Total Actual Hours: 20.2h**
+
+---
+
+# 4. Sprint Work Plan
+
+## 4.1 Completed Tasks (Sprint 1)
+- Implement login page UI (Cai)  
+- Connect frontend with backend API (Cai & Sun)  
+- Design database schema (Sun)  
+- Implement link editor (Sun)  
+- Create basic risk–skill graph (Sun)  
+- Write test cases for login feature (Zhang)  
+- Draft and refine documentation (Zhang)  
+
+## 4.2 Sprint 2 Goals
+- Improve graph visualization (clearer, more complex relationships)  
+- Complete login & register workflow with different user roles  
+- Implement trainee/trainer dashboards  
+- Add training materials module  
+- Improve traceability dashboard  
+
+---
+
+# 5. System Features
+
+1. Training content management  
+2. Risk–skill linkage with graph visualization  
+3. Role-based access control (trainer / trainee)  
+4. Performance tracking & reporting  
+5. Persistent backend database  
+6. Browser-accessible web interface  
+
+---
+
+# 6. System Architecture
+
+## 6.1 Architecture Description
+- **Frontend**: HTML/CSS/JS  
+- **Backend**: Java server (`SimpleStaticServer.java`)  
+- **Database**: MySQL / SQLite  
+- **Graph Module**: Visualizes risk–skill connections  
+
+## 6.2 Architecture Diagram
+
+```mermaid
+flowchart LR
+    User((User)) --> Browser[Web Browser]
+
+    Browser --> FE[Frontend (HTML/CSS/JS)]
+    FE --> API["Backend Java Server<br/>SimpleStaticServer.java"]
+
+    API --> DB[(Database<br/>MySQL / SQLite)]
+
+    API --> Graph[Risk-Skill Graph Module]
+    Graph --> FE
+## 7 flowchart TD
+    A[Identify Device Risks] --> B[Define Required Skills]
+    B --> C[Create Training Materials]
+    C --> D[Assign Training to Trainees]
+    D --> E[Conduct Assessment]
+    E --> F[Store Results in Database]
+    F --> G[Generate Traceability Report]
+
+    G --> H{Are All Risks Covered?}
+    H -- Yes --> I[Training Completed]
+    H -- No --> B
+| Risk ID | Description | Linked Skills | Impact | Mitigation |
+|---------|-------------|----------------|--------|------------|
+| R001 | Incorrect device usage | S001 | High | Add device operation tutorial & test |
+| R002 | Calibration not understood | S003 | Medium | Add calibration guide |
+| R003 | Missing documentation | S004 | Low | Add documentation checklist |
+| Requirement | Linked Risks | Linked Skills | Training Material | Assessment | Status |
+|-------------|--------------|----------------|-------------------|-------------|---------|
+| REQ-01 Login system | R003 | S010 | User Guide | Login Test Cases | Done |
+| REQ-02 Risk–Skill Graph | R001 | S002 | Graph UI | Graph Tests | Done |
+| REQ-03 Skill Editor | R001, R002 | S003, S004 | Editor Page | Editor Tests | In Progress |
+
+mindmap
+  root((Medical Device Training System))
+    Frontend
+      Login Page
+      Dashboard UI
+      Graph Display
+    Backend
+      API Endpoints
+      Database Schema
+      Authentication
+    Documentation
+      README
+      Test Cases
+    Testing
+      Unit Tests
+      Integration Tests
+      UI Tests
+
+
+    DB --> API
+
