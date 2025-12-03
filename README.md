@@ -96,4 +96,34 @@ flowchart LR
     BE --> GM[Graph Module<br/>Generate Risk-Skill Data]
 
     GM --> FE
+## 6.2 System Architecture Diagram
+
+The architecture of the system follows a simple structure as discussed with the supervisor.  
+The main focus is to clearly show how risks and skills are connected and how this information flows through the system.  
+The system consists of four main components:
+
+1. **Frontend UI**  
+   - Provides the dashboard, editor, and the graph interface.  
+   - Sends user operations (e.g., adding risks, linking skills) to the backend.
+
+2. **Backend Java Server**  
+   - Processes incoming requests from the frontend.  
+   - Handles logic such as creating links, retrieving risks and skills, and preparing data for visualization.  
+   - Communicates with both the database and the graph module.
+
+3. **Database**  
+   - Stores users, risks, skills, and risk–skill link data.  
+   - Ensures that all traceability information is kept consistently.
+
+4. **Graph Module**  
+   - Generates the risk–skill connection data structure based on backend queries.  
+   - Provides formatted graph data that the frontend can render visually.
+
+This architecture clearly shows how data flows through the system and supports the traceability requirement emphasized by the supervisor.
+
+### Architecture Diagram
+
+```mermaid
+flowchart LR
+    FE[Frontend UI\nDashboard]()
 
