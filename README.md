@@ -85,3 +85,73 @@ The system connects **device risks → required skills → training materials �
 - **Backend**: Java server (`SimpleStaticServer.java`)  
 - **Database**: MySQL / SQLite  
 - **Graph Module**: Visualizes risk–skill connections  
+## 6.2 System Architecture Diagram
+
+The system follows a **simple three-layer architecture**, which matches the project scope and the teacher’s expectations:
+
+1. **Frontend (Browser UI)**  
+   - Displays pages such as login, dashboard, risk–skill graph, and training editor.  
+   - Sends/receives data using HTTP requests.
+
+2. **Backend (Java Server)**  
+   - Handles all logic: data processing, risk–skill linking, and graph data generation.  
+   - Provides endpoints for fetching risks, skills, and connection information.
+
+3. **Database (MySQL/SQLite)**  
+   - Stores users, risks, skills, training materials, and traceability records.
+
+4. **Graph Module**  
+   - Backend generates the graph data based on stored relationships.  
+   - Frontend visualizes the graph and updates connections in real time.
+
+### Architecture Diagram (Simplified as teacher requested)
+
+```mermaid
+flowchart LR
+    FE[Frontend UI<br/>(Dashboard, Editor, Graph Page)]
+        --> BE[Backend Java Server<br/>(Logic + API)]
+
+    BE --> DB[(Database<br/>Users / Risks / Skills / Links)]
+    BE --> GM[Graph Module<br/>Generate Risk–Skill Links]
+
+    GM --> FE
+## 6.3 Backend Logic Flow
+
+When the user interacts with the system (e.g., adds a risk or connects a skill),  
+the backend follows this process:
+
+1. Receive HTTP request from frontend  
+2. Validate input  
+3. Query or update the database  
+4. Recalculate the risk–skill relationships  
+5. Generate graph data structure (nodes + links)  
+6. Return JSON response to the frontend  
+
+This logic ensures that every training update is reflected immediately in the graph.
+## 6.4 Data Model Overview
+
+The system uses a simple relational structure:
+
+- **Users**
+  - id, name, role, password_hash
+- **Risks**
+  - risk_id, description
+- **Skills**
+  - skill_id, description
+- **RiskSkillLinks**
+  - link_id, risk_id, skill_id (many-to-many relationship)
+- **TrainingMaterials**
+  - material_id, skill_id, file_path
+
+This structure supports risk–skill traceability and future extension.
+## 6.5 API Endpoints
+
+| Endpoint | Method | Description |
+|----------|---------|-------------|
+| /login | POST | User login |
+| /risk/list | GET | Get all risks |
+| /skill/list | GET | Get all skills |
+| /link/create | POST | Create a risk–skill link |
+| /graph/data | GET | Get graph JSON data |
+
+These endpoints support all essential operations of the system.
