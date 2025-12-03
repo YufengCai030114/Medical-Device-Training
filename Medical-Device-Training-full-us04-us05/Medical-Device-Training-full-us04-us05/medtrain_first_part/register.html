@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Medical Training – Register</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        body{
+            font-family:ui-sans-serif,system-ui,Arial;
+            background:#f3f4f6;
+            margin:0;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .card{
+            background:#fff;
+            border:1px solid #e5e7eb;
+            border-radius:16px;
+            box-shadow:0 10px 25px rgba(15,23,42,0.06);
+            padding:24px 24px 20px;
+            width:380px;
+            box-sizing:border-box;
+        }
+        h1{
+            margin:0 0 4px;
+            font-size:22px;
+        }
+        .muted{color:#6b7280;font-size:13px;margin-bottom:16px;}
+        label{
+            display:block;
+            font-size:13px;
+            margin-bottom:4px;
+            color:#374151;
+        }
+        input,button{
+            width:100%;
+            box-sizing:border-box;
+            padding:8px 10px;
+            border-radius:8px;
+            border:1px solid #e5e7eb;
+            font-size:14px;
+            margin-bottom:12px;
+        }
+        button{
+            background:#16a34a;
+            color:#fff;
+            font-weight:500;
+            cursor:pointer;
+            border:none;
+        }
+        button:hover{filter:brightness(1.05);}
+        .top-link{
+            font-size:12px;
+            color:#6b7280;
+            margin-bottom:12px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        .top-link a{
+            color:#2563eb;
+            text-decoration:none;
+            font-weight:500;
+        }
+        .error{
+            font-size:13px;
+            color:#b91c1c;
+            background:#fef2f2;
+            border:1px solid #fecaca;
+            border-radius:8px;
+            padding:6px 10px;
+            margin-bottom:10px;
+        }
+        .success{
+            font-size:13px;
+            color:#166534;
+            background:#ecfdf3;
+            border:1px solid #bbf7d0;
+            border-radius:8px;
+            padding:6px 10px;
+            margin-bottom:10px;
+        }
+        .hidden{display:none;}
+        .footer-text{
+            font-size:12px;
+            color:#9ca3af;
+            margin-top:8px;
+            text-align:center;
+        }
+        .hint{
+            font-size:11px;
+            color:#6b7280;
+            margin-top:-6px;
+            margin-bottom:10px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="top-link">
+        <span>Medical Training</span>
+        <a href="login.html">← Back to login</a>
+    </div>
+
+    <h1>Register</h1>
+    <div id="errorBox" class="error hidden"></div>
+    <div id="successBox" class="success hidden"></div>
+
+    <form id="registerForm">
+        <label for="username">Username</label>
+        <input id="username" name="username"  autocomplete="username" />
+        <div class="hint">
+            Usernames starting with <code>trainer</code> will be treated as trainers; others as trainees.
+        </div>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password"  autocomplete="new-password" />
+
+        <label for="password2">Confirm password</label>
+        <input id="password2" name="password2" type="password"  autocomplete="new-password" />
+
+        <button type="submit">Create account</button>
+    </form>
+
+    <div class="footer-text">
+        Already have an account? <a href="login.html" style="color:#2563eb;text-decoration:none;">Login</a>
+    </div>
+</div>
+
+<script>
+    const API_BASE = (path) => `http://localhost:3000/${path}`;
+
+    const errorBox = document.getElementById('errorBox');
+    const successBox = document.getElementById('successBox');
+
+    function showError(msg){
+        errorBox.textContent = msg;
+        errorBox.classList.remove('hidden');
+        successBox.classList.add('hidden');
+    }
+
+    function showSuccess(msg){
+        successBox.textContent = msg;
+        successBox.classList.remove('hidden');
+        errorBox.classList.add('hidden');
+    }
+
+    async function usernameExists(username) {
+        const params = new URLSearchParams();
+        params.append('select', 'id');
+        params.append('username', `eq.${username}`);
+
+        const res = await fetch(API_BASE('user?' + params.toString()), {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) {
+            throw new Error('HTTP ' + res.status);
+        }
+        const data = await res.json();
+        return Array.isArray(data) && data.length > 0;
+    }
+
+    // ★ 改这里：调用 rpc/signup_user，而不是 POST /user
+    async function createUser(username, password) {
+        const res = await fetch(API_BASE('rpc/signup_user'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                p_username: username,
+                p_password: password
+            })
+        });
+
+        if (!res.ok) {
+            let msg = 'HTTP ' + res.status;
+            try {
+                const errBody = await res.json();
+                if (errBody && errBody.message) {
+                    msg += ' – ' + errBody.message;
+                }
+            } catch (_) {}
+            throw new Error(msg);
+        }
+
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('Empty response from API');
+        }
+        return data[0];
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const password2 = document.getElementById('password2').value;
+
+        if (!username || !password || !password2) {
+            showError('Please fill in all fields.');
+            return;
+        }
+        if (password.length < 4) {
+            showError('Password must be at least 4 characters long (for demo).');
+            return;
+        }
+        if (password !== password2) {
+            showError('Passwords do not match.');
+            return;
+        }
+
+        try {
+            const exists = await usernameExists(username);
+            if (exists) {
+                showError('This username is already taken.');
+                return;
+            }
+
+            const row = await createUser(username, password);
+
+            const role = username.startsWith('trainer') ? 'trainer' : 'trainee';
+
+            localStorage.setItem('mt_user', JSON.stringify({
+                id: row.id,
+                username: row.username,
+                role
+            }));
+
+            window.location.href = 'simple-interface-prototype-fetch.html';
+        } catch (err) {
+            console.error(err);
+            showError('Registration failed: ' + err.message);
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Medical Training – Home</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        body{
+            font-family:ui-sans-serif,system-ui,Arial;
+            margin:0;
+            background:#f3f4f6;
+            color:#111827;
+        }
+        a{text-decoration:none;color:inherit;}
+        header{
+            position:sticky;
+            top:0;
+            z-index:10;
+            background:#ffffffcc;
+            backdrop-filter:blur(12px);
+            border-bottom:1px solid #e5e7eb;
+        }
+        .nav{
+            max-width:960px;
+            margin:0 auto;
+            padding:10px 16px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+        }
+        .nav-left{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            font-weight:600;
+        }
+        .badge{
+            font-size:11px;
+            padding:2px 6px;
+            border-radius:999px;
+            background:#eff6ff;
+            color:#1d4ed8;
+            border:1px solid #bfdbfe;
+        }
+        .nav-links{
+            display:flex;
+            gap:16px;
+            font-size:14px;
+            align-items:center;
+        }
+        .nav-links a{
+            color:#4b5563;
+        }
+        .nav-links a:hover{
+            color:#1d4ed8;
+        }
+        .nav-cta{
+            display:flex;
+            gap:8px;
+        }
+        .btn{
+            padding:6px 12px;
+            border-radius:999px;
+            font-size:13px;
+            border:1px solid #d1d5db;
+            background:#fff;
+            cursor:pointer;
+        }
+        .btn-primary{
+            background:#2563eb;
+            border-color:#2563eb;
+            color:#fff;
+        }
+        .btn-primary:hover{filter:brightness(1.05);}
+        .btn:hover{background:#f9fafb;}
+
+        main{
+            max-width:960px;
+            margin:0 auto;
+            padding:24px 16px 40px;
+        }
+        .hero{
+            display:grid;
+            grid-template-columns: minmax(0,2fr) minmax(0,1.4fr);
+            gap:32px;
+            align-items:center;
+            margin-top:16px;
+            margin-bottom:40px;
+        }
+        @media(max-width:768px){
+            .hero{
+                grid-template-columns:1fr;
+            }
+        }
+        .hero-title{
+            font-size:32px;
+            font-weight:700;
+            margin-bottom:8px;
+        }
+        .hero-sub{
+            font-size:15px;
+            color:#4b5563;
+            margin-bottom:20px;
+            line-height:1.5;
+        }
+        .hero-actions{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin-bottom:8px;
+        }
+        .hero-meta{
+            font-size:12px;
+            color:#6b7280;
+        }
+        .hero-card{
+            background:#fff;
+            border-radius:16px;
+            border:1px solid #e5e7eb;
+            padding:18px;
+            box-shadow:0 12px 20px rgba(15,23,42,0.04);
+            font-size:13px;
+        }
+        .hero-card h3{
+            margin:0 0 8px;
+            font-size:15px;
+        }
+        .hero-list{
+            list-style:none;
+            padding:0;
+            margin:0;
+        }
+        .hero-list li{
+            margin-bottom:6px;
+            display:flex;
+            gap:6px;
+            align-items:flex-start;
+        }
+        .dot{
+            width:6px;
+            height:6px;
+            border-radius:999px;
+            background:#22c55e;
+            margin-top:5px;
+        }
+
+        .section{
+            margin-bottom:32px;
+        }
+        .section h2{
+            font-size:20px;
+            margin:0 0 12px;
+        }
+        .section p{
+            font-size:14px;
+            color:#4b5563;
+            max-width:720px;
+        }
+
+        .grid-3{
+            display:grid;
+            grid-template-columns: repeat(3,minmax(0,1fr));
+            gap:16px;
+        }
+        @media(max-width:900px){
+            .grid-3{
+                grid-template-columns: repeat(2,minmax(0,1fr));
+            }
+        }
+        @media(max-width:640px){
+            .grid-3{
+                grid-template-columns: 1fr;
+            }
+        }
+        .card{
+            background:#fff;
+            border-radius:14px;
+            border:1px solid #e5e7eb;
+            padding:14px 14px 12px;
+            font-size:13px;
+        }
+        .card h3{
+            margin:0 0 6px;
+            font-size:15px;
+        }
+        .card small{
+            color:#6b7280;
+        }
+
+        .two-col{
+            display:grid;
+            grid-template-columns: minmax(0,1.3fr) minmax(0,1fr);
+            gap:24px;
+        }
+        @media(max-width:768px){
+            .two-col{grid-template-columns:1fr;}
+        }
+
+        .contact-box, .impressum-box{
+            background:#fff;
+            border-radius:14px;
+            border:1px solid #e5e7eb;
+            padding:14px 14px 8px;
+            font-size:13px;
+        }
+        footer{
+            border-top:1px solid #e5e7eb;
+            padding:12px 16px;
+            font-size:11px;
+            color:#9ca3af;
+            text-align:center;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="nav">
+        <div class="nav-left">
+            <span>Medical Training</span>
+            <span class="badge">Prototype</span>
+        </div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#contact">Contact</a>
+            <a href="#impressum">Impressum</a>
+            <div class="nav-cta">
+                <a href="login.html"><button class="btn">Login</button></a>
+                <a href="register.html"><button class="btn btn-primary">Register</button></a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main>
+    <!-- HERO -->
+    <section class="hero">
+        <div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">
+                Training & Risk Management for Medical Devices
+            </div>
+            <div class="hero-title">Improve training for critical medical devices.</div>
+            <p class="hero-sub">
+                This prototype helps trainers map <strong>risks</strong>, <strong>skills</strong>,
+                and <strong>training materials</strong> in a transparent way.
+                It is part of a study project and not intended for real medical use.
+            </p>
+            <div class="hero-actions">
+                <a href="simple-interface-prototype-fetch.html">
+                    <button class="btn btn-primary">Open Training Console</button>
+                </a>
+                <a href="login.html">
+                    <button class="btn">Login</button>
+                </a>
+            </div>
+            <div class="hero-meta">
+                Demo only · Runs locally with PostgREST · For educational purposes
+            </div>
+        </div>
+
+        <div class="hero-card">
+            <h3>What you can explore</h3>
+            <ul class="hero-list">
+                <li>
+                    <span class="dot"></span>
+                    <span><strong>Risks:</strong> browse device-related risks and see which skills mitigate them.</span>
+                </li>
+                <li>
+                    <span class="dot"></span>
+                    <span><strong>Skills:</strong> define competencies and link them to training materials.</span>
+                </li>
+                <li>
+                    <span class="dot"></span>
+                    <span><strong>Traceability:</strong> follow the chain from risk → skill → material.</span>
+                </li>
+                <li>
+                    <span class="dot" style="background:#f97316;"></span>
+                    <span><strong>Checks & Reports:</strong> run simple data quality checks on the training set-up.</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="section">
+        <h2>Features</h2>
+        <p>
+            The prototype focuses on traceability between risks, skills and training content.
+            All data is stored in a PostgreSQL database and exposed via PostgREST.
+        </p>
+        <div class="grid-3" style="margin-top:12px;">
+            <div class="card">
+                <h3>Risk Register</h3>
+                <small>Map device-related risks</small>
+                <p>
+                    Maintain a list of risks with severity levels, codes and titles.
+                    See directly which skills and materials are linked to each risk.
+                </p>
+            </div>
+            <div class="card">
+                <h3>Skills Library</h3>
+                <small>Competencies & proficiency levels</small>
+                <p>
+                    Define skills required to mitigate specific risks and connect them to training materials.
+                </p>
+            </div>
+            <div class="card">
+                <h3>Traceability View</h3>
+                <small>Risk → Skill → Material</small>
+                <p>
+                    Explore aggregated traceability in a table or graph view to understand coverage and gaps.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT + IMPRESSUM -->
+    <section class="section two-col" id="contact">
+        <div>
+            <h2>Contact</h2>
+            <div class="contact-box">
+                <p>
+                    This application is a university project prototype.
+                    If you have questions about the concept, implementation or demo data, please contact:
+                </p>
+                <p>
+                    <strong>Project Owner:</strong><br/>
+                    YufengCai
+                    GongchengSun
+                    JiayinZhang<br/>
+                    <a href="mailto:you@example.com">Group12@example.com</a>
+                </p>
+                <p style="color:#6b7280;font-size:12px;">
+                    Replace the placeholder contact details with your own or with your supervisor's
+                    information if needed.
+                </p>
+            </div>
+        </div>
+
+        <div id="impressum">
+            <h2>Impressum / Legal Notice</h2>
+            <div class="impressum-box">
+                <p>
+                    This website is created as part of a study project.
+                    It is <strong>not</strong> intended for real clinical use, patient data,
+                    or production training management.
+                </p>
+                <p>
+                    All data shown in the demo are fictitious examples.
+                    No real patient, hospital or manufacturer data is used.
+                </p>
+                <p style="font-size:12px;color:#6b7280;">
+                    You can extend this section with the required legal information
+                    for your institution (e.g. address, responsible person, university name).
+                </p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    © 2025 Medical Training Prototype · Educational use only
+</footer>
+</body>
+</html>

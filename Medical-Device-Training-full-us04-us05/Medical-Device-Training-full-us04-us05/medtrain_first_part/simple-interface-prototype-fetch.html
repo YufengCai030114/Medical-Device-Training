@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Medical Training (Full UI)</title>
+    <style>
+        body{font-family:ui-sans-serif,system-ui,Arial; background:#fafafa; margin:0;}
+        header{display:flex;gap:12px;align-items:center;padding:16px 20px;border-bottom:1px solid #eee;background:#fff;position:sticky;top:0}
+        .status{font-size:12px;color:#5a5}
+        .container{display:grid;grid-template-columns:240px 1fr; gap:16px; padding:16px}
+        .card{background:#fff;border:1px solid #eee;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+        .nav{display:flex;flex-direction:column;padding:12px}
+        .nav button{padding:10px 12px;border:1px solid #eee;border-radius:10px;background:#fff;margin:6px 0;text-align:left;cursor:pointer}
+        .nav button.active{background:#eef6ff;border-color:#cfe5ff}
+        .panel{padding:12px 12px 4px}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:10px;border-bottom:1px solid #f0f0f0;text-align:left;font-size:14px}
+        th{font-weight:600;color:#333;background:#fafcff}
+        .chip{display:inline-block;padding:2px 8px;border:1px solid #e6eef5;border-radius:999px;font-size:12px;margin-right:6px}
+        .muted{color:#777;font-size:12px}
+        .toolbar{display:flex;gap:8px;align-items:center;margin:8px 0 12px}
+        input,select,button{padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer}
+        button:disabled{opacity:.6;cursor:not-allowed}
+        .hidden{display:none}
+    </style>
+</head>
+<body>
+<header style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #eee;background:#fff;position:sticky;top:0;">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <h1 style="margin:0">Medical Training</h1>
+        <span class="status" id="status">Connecting to PostgREST…</span>
+    </div>
+    <button id="btnAuthTop" style="padding:6px 12px;cursor:pointer;border-radius:999px;border:1px solid #e5e7eb;background:#fff;font-size:13px;">
+        Login / Register
+    </button>
+</header>
+<div class="container">
+    <!-- Left nav -->
+    <aside class="card nav">
+        <button data-tab="risks" class="active">Risks</button>
+        <button data-tab="skills">Skills</button>
+        <button data-tab="materials">Training Materials</button>
+        <button data-tab="trace">Traceability</button>
+        <button data-tab="checks">Checks & Reports</button>
+        <button onclick="window.location.href='link-editor.html'">
+            Link Editor
+        </button>
+    </aside>
+
+    <!-- Right content -->
+    <section class="card panel">
+        <!-- RISKS -->
+        <div id="tab-risks">
+            <div class="toolbar">
+                <input id="qRisk" placeholder="Search risks (code/title)" />
+                <select id="sev">
+                    <option value="">All severity</option>
+                    <option>5</option><option>4</option><option>3</option><option>2</option><option>1</option>
+                </select>
+                <button id="btnRiskReload">Reload</button>
+            </div>
+            <table>
+                <thead><tr><th>Code</th><th>Title</th><th>Severity</th><th>Linked</th></tr></thead>
+                <tbody id="riskRows"><tr><td colspan="4">Loading…</td></tr></tbody>
+            </table>
+            <div class="muted" style="padding:8px">Tip: Open “Traceability” for a roll-up view.</div>
+        </div>
+
+        <!-- SKILLS -->
+        <div id="tab-skills" class="hidden">
+            <div class="toolbar">
+                <input id="qSkill" placeholder="Search skills (code/name)" />
+                <select id="level">
+                    <option value="">All levels</option>
+                    <option>5</option><option>4</option><option>3</option><option>2</option><option>1</option>
+                </select>
+                <button id="btnSkillReload">Reload</button>
+            </div>
+            <table>
+                <thead id="skillHead"><tr><th>Code</th><th>Name</th><th>Level</th><th>Description</th></tr></thead>
+                <tbody id="skillRows"><tr><td colspan="4">Loading…</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- MATERIALS -->
+        <div id="tab-materials" class="hidden">
+            <div class="toolbar">
+                <input id="qMat" placeholder="Search materials (code/title/type)" />
+                <button id="btnMatReload">Reload</button>
+            </div>
+            <table>
+                <thead id="matHead"><tr><th>Code</th><th>Title</th><th>Type</th><th>URL</th><th>Description</th></tr></thead>
+                <tbody id="matRows"><tr><td colspan="5">Loading…</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- TRACEABILITY -->
+        <div id="tab-trace" class="hidden">
+            <div class="toolbar">
+                <button onclick="window.open('trace-graph.html', '_blank')">
+                    Open graph view
+                </button>
+            </div>
+
+            <div class="muted" style="margin:8px 0">
+                Aggregated from view <code>risk_traceability</code>.
+            </div>
+            <table>
+                <thead><tr><th>Risk</th><th>Title</th><th>Severity</th><th>Skills</th><th>Materials</th></tr></thead>
+                <tbody id="traceRows"><tr><td colspan="5">Loading…</td></tr></tbody>
+            </table>
+        </div>
+        <div id="tab-trace" class="hidden">
+            <div class="muted" style="margin:8px 0">Aggregated from view <code>risk_traceability</code>.</div>
+            <table>
+                <thead><tr><th>Risk</th><th>Title</th><th>Severity</th><th>Skills</th><th>Materials</th></tr></thead>
+                <tbody id="traceRows"><tr><td colspan="5">Loading…</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- CHECKS -->
+        <div id="tab-checks" class="hidden">
+            <div class="muted" style="margin:8px 0">Data quality checks (uses DB views if present; otherwise falls back to client-side).</div>
+            <table>
+                <thead><tr><th>Check</th><th>Result</th></tr></thead>
+                <tbody id="checkRows"><tr><td colspan="2">Loading…</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<script>
+    // === API base (change port if PostgREST is on another port) ===
+    const API_BASE = (path) => `http://localhost:3000/${path}`;
+
+    const $ = s => document.querySelector(s);
+    // ---------- Simple front-end login state (localStorage) ----------
+function getCurrentUser() {
+    const raw = localStorage.getItem('mt_user');
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
+}
+
+function setCurrentUser(user) {
+    if (user) {
+        localStorage.setItem('mt_user', JSON.stringify(user));
+    } else {
+        localStorage.removeItem('mt_user');
+        localStorage.removeItem('mt_token');
+    }
+    refreshUserUI();
+}
+
+function refreshUserUI() {
+    const btn = document.getElementById('btnAuthTop');
+    if (!btn) return;
+    const user = getCurrentUser();
+    if (!user) {
+        btn.textContent = 'Login / Register';
+    } else {
+        btn.textContent = `${user.username} (${user.role}) · Logout`;
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btnAuthTop');
+    if (btn) {
+        btn.addEventListener('click', () => {
+            const user = getCurrentUser();
+            // Not logged in: go to login page
+            if (!user) {
+                window.location.href = 'login.html';
+            } else {
+                // Already logged in: click = logout
+                if (confirm('Logout?')) {
+                    setCurrentUser(null);
+                }
+            }
+        });
+    }
+    refreshUserUI();
+});
+    // -------- RISKS ----------
+    async function loadRisks(){
+      const rows = $('#riskRows');
+      const q = encodeURIComponent($('#qRisk').value.trim());
+      const sev = $('#sev').value;
+      let url = API_BASE('risk?select=id,code,title,severity');
+      const filters = [];
+      if (q)  filters.push(`or=(code.ilike.*${q}*,title.ilike.*${q}*)`);
+      if (sev) filters.push(`severity.eq.${sev}`);
+      if (filters.length) url += '&' + filters.join('&');
+
+      try{
+        const [risksRes, traceRes] = await Promise.all([
+          fetch(url),
+          fetch(API_BASE('risk_traceability'))
+        ]);
+        if(!risksRes.ok) throw new Error('risk '+risksRes.status);
+        if(!traceRes.ok) throw new Error('trace '+traceRes.status);
+        const [risks, traces] = await Promise.all([risksRes.json(), traceRes.json()]);
+        const byId = new Map(traces.map(t => [t.id, t]));
+        rows.innerHTML = risks.map(r=>{
+          const t = byId.get(r.id)||{};
+          const skills = (t.skills||[]).map(x=>`<span class="chip">${x}</span>`).join(' ');
+          const mats   = (t.materials||[]).map(x=>`<span class="chip">${x}</span>`).join(' ');
+          return `<tr><td>${r.code}</td><td>${r.title}</td><td>${r.severity}</td><td>${skills} ${mats}</td></tr>`;
+        }).join('') || '<tr><td colspan="4">No results.</td></tr>';
+        $('#status').textContent = 'Connected to PostgREST ✓';
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="4">Failed: ${e.message}</td></tr>`;
+        $('#status').textContent = 'Connection failed ✗';
+      }
+    }
+
+    // -------- SKILLS ----------
+    async function loadSkills(){
+      const rows = $('#skillRows');
+      const q = encodeURIComponent($('#qSkill').value.trim());
+      const lv = $('#level').value;
+      let url = API_BASE('skill?select=code,name,level,description');
+      const filters = [];
+      if (q) filters.push(`or=(code.ilike.*${q}*,name.ilike.*${q}*)`);
+      if (lv) filters.push(`level.eq.${lv}`);
+      if (filters.length) url += '&' + filters.join('&');
+
+      try{
+        const res = await fetch(url);
+        if(!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        rows.innerHTML = data.map(s=>`<tr>
+          <td>${s.code}</td><td>${s.name}</td><td>${s.level ?? ''}</td><td>${s.description ?? ''}</td>
+        </tr>`).join('') || '<tr><td colspan="4">No skills.</td></tr>';
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="4">Failed: ${e.message}</td></tr>`;
+      }
+    }
+
+    // -------- MATERIALS ----------
+    async function loadMaterials(){
+      const rows = $('#matRows');
+      const q = encodeURIComponent($('#qMat').value.trim());
+      let url = API_BASE('training_material?select=code,title,type,url,description');
+      if (q) url += `&or=(code.ilike.*${q}*,title.ilike.*${q}*,type.ilike.*${q}*)`;
+      try{
+        const res = await fetch(url);
+        if(!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        rows.innerHTML = data.map(m=>`<tr>
+          <td>${m.code}</td><td>${m.title}</td><td>${m.type}</td>
+          <td>${m.url ? `<a href="${m.url}" target="_blank" rel="noreferrer">${m.url}</a>` : ''}</td>
+          <td>${m.description ?? ''}</td>
+        </tr>`).join('') || '<tr><td colspan="5">No materials.</td></tr>';
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="5">Failed: ${e.message}</td></tr>`;
+      }
+    }
+
+    // -------- TRACEABILITY ----------
+    async function loadTraceability(){
+      const rows = $('#traceRows');
+      try{
+        const res = await fetch(API_BASE('risk_traceability'));
+        if(!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        rows.innerHTML = data.map(r=>`<tr>
+          <td>${r.risk}</td><td>${r.title}</td><td>${r.severity}</td>
+          <td>${(r.skills||[]).map(x=>`<span class="chip">${x}</span>`).join('')||'—'}</td>
+          <td>${(r.materials||[]).map(x=>`<span class="chip">${x}</span>`).join('')||'—'}</td>
+        </tr>`).join('') || '<tr><td colspan="5">No data.</td></tr>';
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="5">Failed: ${e.message}</td></tr>`;
+      }
+    }
+
+    // -------- CHECKS (DB views if exist; else fallback) ----------
+    async function loadChecks(){
+      const rows = $('#checkRows');
+      async function tryJson(path){
+        const r = await fetch(API_BASE(path));
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      }
+      try{
+        // try database views
+        const results = {};
+        try { results.noSkill = await tryJson('v_risks_without_skills'); } catch {}
+        try { results.noMat   = await tryJson('v_risks_without_materials'); } catch {}
+        try { results.orSkill = await tryJson('v_orphan_skills'); } catch {}
+        try { results.orMat   = await tryJson('v_orphan_materials'); } catch {}
+
+        if (results.noSkill || results.noMat || results.orSkill || results.orMat){
+          const chip = list => (list && list.length)
+            ? list.map(x=>`<span class="chip">${x.code || x}</span>`).join('') : 'OK';
+          rows.innerHTML = `
+            <tr><td>Risks without linked skills</td><td>${chip(results.noSkill)}</td></tr>
+            <tr><td>Risks without linked materials</td><td>${chip(results.noMat)}</td></tr>
+            <tr><td>Skills not used by any risk</td><td>${chip(results.orSkill)}</td></tr>
+            <tr><td>Materials not linked via any skill</td><td>${chip(results.orMat)}</td></tr>
+          `;
+          return;
+        }
+
+        // fallback: client-side infer from traceability
+        const [risks, trace, skills, mats] = await Promise.all([
+          tryJson('risk?select=id,code'),
+          tryJson('risk_traceability'),
+          tryJson('skill?select=id,code'),
+          tryJson('training_material?select=id,code'),
+        ]);
+        const tById = new Map(trace.map(t=>[t.id,t]));
+        const risksNoSkill = risks.filter(r => (tById.get(r.id)?.skills ?? []).length===0);
+        const risksNoMat   = risks.filter(r => (tById.get(r.id)?.materials ?? []).length===0);
+        const skillSet = new Set(trace.flatMap(t => t.skills ?? []));
+        const matSet   = new Set(trace.flatMap(t => t.materials ?? []));
+        const orphanSkills = skills.filter(s => !skillSet.has(s.code));
+        const orphanMats   = mats.filter(m => !matSet.has(m.code));
+
+        rows.innerHTML = `
+          <tr><td>Risks without linked skills</td><td>${(risksNoSkill.map(x=>`<span class="chip">${x.code}</span>`).join('')) || 'OK'}</td></tr>
+          <tr><td>Risks without linked materials</td><td>${(risksNoMat.map(x=>`<span class="chip">${x.code}</span>`).join('')) || 'OK'}</td></tr>
+          <tr><td>Skills not used by any risk</td><td>${(orphanSkills.map(x=>`<span class="chip">${x.code}</span>`).join('')) || 'OK'}</td></tr>
+          <tr><td>Materials not linked via any skill</td><td>${(orphanMats.map(x=>`<span class="chip">${x.code}</span>`).join('')) || 'OK'}</td></tr>
+        `;
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="2">Failed: ${e.message}</td></tr>`;
+      }
+    }
+
+    // ---- Tab controls ----
+    function setActive(tab){
+      document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+      ['risks','skills','materials','trace','checks'].forEach(t=>{
+        const el = document.getElementById('tab-'+t);
+        el.classList.toggle('hidden', t!==tab);
+      });
+    }
+    document.querySelectorAll('.nav button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const tab = btn.dataset.tab;
+        setActive(tab);
+        if (tab==='risks') loadRisks();
+        if (tab==='skills') loadSkills();
+        if (tab==='materials') loadMaterials();
+        if (tab==='trace') loadTraceability();
+        if (tab==='checks') loadChecks();
+      });
+    });
+
+    // Reload buttons
+    $('#btnRiskReload').onclick = loadRisks;
+    $('#btnSkillReload').onclick = loadSkills;
+    $('#btnMatReload').onclick   = loadMaterials;
+
+    // Initial load
+    loadRisks();
+</script>
+</body>
+</html>
