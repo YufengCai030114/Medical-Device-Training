@@ -118,26 +118,3 @@ flowchart LR
     BE --> GM[Graph Module]
 
     GM --> FE
-## 6.3 Backend Logic Flow
-
-The backend follows a straightforward request–processing workflow.  
-Whenever the user performs an action in the frontend (such as adding a risk, linking a skill, or requesting the graph), the server executes the following steps:
-
-1. **Receive HTTP request from the frontend**  
-   The Java server handles incoming GET or POST requests.
-
-2. **Validate and parse input**  
-   The backend checks the request type, parameters, and data structure.
-
-3. **Query or update the database**  
-   - Retrieve lists of risks or skills  
-   - Add or update risk–skill links  
-   - Store user actions
-
-4. **Generate risk–skill graph data**  
-   The backend creates a node–link JSON structure for the visualization module.
-
-5. **Return a JSON response to the frontend**  
-   The frontend then updates the traceability graph or UI based on this response.
-
-This backend logic ensures that every change made by the user is immediately reflected in the system and in the traceability graph.
