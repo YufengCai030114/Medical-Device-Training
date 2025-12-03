@@ -118,3 +118,63 @@ flowchart LR
     BE --> GM[Graph Module]
 
     GM --> FE
+## 6.3 Backend Logic Flow
+
+The backend logic follows a simple and clear workflow, ensuring that every action performed in the frontend is processed consistently:
+
+1. The frontend sends a request (e.g., create link, load risks, load skills).
+2. The Java backend receives the request and validates the parameters.
+3. Depending on the operation, the backend queries or updates the database.
+4. For traceability, the backend collects all related risks, skills, and link records.
+5. The backend generates structured JSON data (e.g., for the graph view).
+6. The response is returned to the frontend, which updates the interface immediately.
+
+This workflow ensures that all risk–skill relationships remain traceable and up-to-date.
+
+---
+
+## 6.4 Data Model Overview
+
+The system uses a minimal relational database structure that supports the required traceability between risks and skills.
+
+### 6.4.1 Users Table
+- `id`
+- `username`
+- `password_hash`
+- `role` (trainer / trainee)
+
+### 6.4.2 Risks Table
+- `risk_id`
+- `description`
+
+### 6.4.3 Skills Table
+- `skill_id`
+- `description`
+
+### 6.4.4 RiskSkillLinks Table
+- `link_id`
+- `risk_id` (foreign key → Risks)
+- `skill_id` (foreign key → Skills)
+
+This table represents the many-to-many relationship between risks and skills, forming the core of the traceability chain.
+
+### 6.4.5 TrainingMaterials Table (optional extension)
+- `material_id`
+- `skill_id`
+- `file_path` or `url`
+
+---
+
+## 6.5 API Overview
+
+The Java backend exposes lightweight API endpoints that allow the frontend to retrieve and update data.
+
+| Endpoint        | Method | Description |
+|-----------------|--------|-------------|
+| `/login`        | POST   | Authenticate user credentials |
+| `/risk/list`    | GET    | Retrieve all risks |
+| `/skill/list`   | GET    | Retrieve all skills |
+| `/link/create`  | POST   | Create a new risk–skill link |
+| `/graph/data`   | GET    | Return JSON structure for graph visualization |
+
+These endpoints support all core interactions of the system and enable the traceability workflow defined in the project requirements.
