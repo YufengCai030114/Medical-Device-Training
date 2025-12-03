@@ -107,6 +107,30 @@ The system consists of four main components:
 4. **Graph Module**  
    - Generates the risk–skill connection data structure based on backend queries.  
    - Provides formatted graph data that the frontend can render visually.
+## 6.2 System Architecture Diagram
+
+The architecture of the system follows a simple and clear structure as discussed with the supervisor.  
+The focus is on showing how risks and skills are connected and how this information flows through the system.  
+The system consists of four main components:
+
+1. **Frontend UI**  
+   - Displays the dashboard, editor, and the graph interface.  
+   - Sends user operations (e.g., adding risks, linking skills) to the backend.
+
+2. **Backend Java Server**  
+   - Processes requests from the frontend.  
+   - Performs logic such as creating links, retrieving risks/skills, and preparing data for the graph.  
+   - Communicates with both the database and the graph module.
+
+3. **Database**  
+   - Stores users, risks, skills, and risk–skill link information.  
+   - Ensures all traceability data remains consistent.
+
+4. **Graph Module**  
+   - Generates the risk–skill connection data structure.  
+   - Provides formatted data for the frontend to visualize.
+
+### Architecture Diagram
 
 ```mermaid
 flowchart LR
@@ -116,64 +140,84 @@ flowchart LR
     BE --> GM[Graph Module]
 
     GM --> FE
+```
+
+---
 
 ## 6.3 Backend Logic Flow
 
-The backend logic follows a simple and clear workflow, ensuring that every action performed in the frontend is processed consistently:
+The backend processes every user action through a simple request–response workflow:
 
-1. The frontend sends a request (e.g., create link, load risks, load skills).
-2. The Java backend receives the request and validates the parameters.
-3. Depending on the operation, the backend queries or updates the database.
-4. For traceability, the backend collects all related risks, skills, and link records.
-5. The backend generates structured JSON data (e.g., for the graph view).
-6. The response is returned to the frontend, which updates the interface immediately.
+1. **Frontend sends a request**  
+   - Example: load risks, create links, load skills, request graph data.
 
-This workflow ensures that all risk–skill relationships remain traceable and up-to-date.
+2. **Backend receives and validates the request**  
+   - Ensures required parameters are included.
+
+3. **Database query or update**  
+   - Retrieves risks/skills  
+   - Stores new risk–skill links  
+   - Updates existing connections if needed
+
+4. **Graph data generation**  
+   - Backend creates a node–link JSON structure based on database contents.
+
+5. **Response to frontend**  
+   - The frontend uses this structured data to update the UI and redraw the graph.
+
+This workflow ensures real-time updates and consistent traceability.
 
 ---
 
 ## 6.4 Data Model Overview
 
-The system uses a minimal relational database structure that supports the required traceability between risks and skills.
+The database is designed to support the many-to-many relationships between risks and skills.
 
-### 6.4.1 Users Table
-- `id`
-- `username`
-- `password_hash`
-- `role` (trainer / trainee)
+### 6.4.1 Users
 
-### 6.4.2 Risks Table
-- `risk_id`
-- `description`
+- id  
+- username  
+- password_hash  
+- role (trainer / trainee)
 
-### 6.4.3 Skills Table
-- `skill_id`
-- `description`
+### 6.4.2 Risks
 
-### 6.4.4 RiskSkillLinks Table
-- `link_id`
-- `risk_id` (foreign key → Risks)
-- `skill_id` (foreign key → Skills)
+- risk_id  
+- description
 
-This table represents the many-to-many relationship between risks and skills, forming the core of the traceability chain.
+### 6.4.3 Skills
 
-### 6.4.5 TrainingMaterials Table (optional extension)
-- `material_id`
-- `skill_id`
-- `file_path` or `url`
+- skill_id  
+- description
+
+### 6.4.4 RiskSkillLinks
+
+- link_id  
+- risk_id (foreign key → Risks)  
+- skill_id (foreign key → Skills)
+
+This table defines the core **risk–skill relationships** required for traceability.
+
+### 6.4.5 TrainingMaterials (optional)
+
+- material_id  
+- skill_id  
+- file_path / url
 
 ---
 
 ## 6.5 API Overview
 
-The Java backend exposes lightweight API endpoints that allow the frontend to retrieve and update data.
+The Java backend provides lightweight HTTP APIs that connect the frontend with the database and graph module.
 
-| Endpoint        | Method | Description |
-|-----------------|--------|-------------|
-| `/login`        | POST   | Authenticate user credentials |
-| `/risk/list`    | GET    | Retrieve all risks |
-| `/skill/list`   | GET    | Retrieve all skills |
-| `/link/create`  | POST   | Create a new risk–skill link |
-| `/graph/data`   | GET    | Return JSON structure for graph visualization |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/login` | POST | Authenticate user credentials |
+| `/risk/list` | GET | Retrieve all risks |
+| `/skill/list` | GET | Retrieve all skills |
+| `/link/create` | POST | Create a new risk–skill link |
+| `/graph/data` | GET | Return node–link JSON for graph rendering |
 
-These endpoints support all core interactions of the system and enable the traceability workflow defined in the project requirements.
+These API endpoints support all core interactions in the system and enable the traceability between risks and skills.
+
+---
