@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Medical Training (Full UI)</title>
+
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        body{font-family:ui-sans-serif,system-ui,Arial; background:#fafafa; margin:0;}
+        header{display:flex;gap:12px;align-items:center;padding:16px 20px;border-bottom:1px solid #eee;background:#fff;position:sticky;top:0;flex-wrap:wrap}
+        .status{font-size:12px;color:#5a5}
+        .container{display:grid;grid-template-columns:240px 1fr; gap:16px; padding:16px}
+        .card{background:#fff;border:1px solid #eee;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+        .nav{display:flex;flex-direction:column;padding:12px}
+        .nav button{padding:10px 12px;border:1px solid #eee;border-radius:10px;background:#fff;margin:6px 0;text-align:left;cursor:pointer}
+        .nav button.active{background:#eef6ff;border-color:#cfe5ff}
+        .panel{padding:12px 12px 4px}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:10px;border-bottom:1px solid #f0f0f0;text-align:left;font-size:14px;vertical-align:top}
+        th{font-weight:600;color:#333;background:#fafcff}
+        .chip{display:inline-block;padding:2px 8px;border:1px solid #e6eef5;border-radius:999px;font-size:12px;margin-right:6px;margin-bottom:4px}
+        .muted{color:#777;font-size:12px}
+        .toolbar{display:flex;gap:8px;align-items:center;margin:8px 0 12px;flex-wrap:wrap}
+        input,select,button,textarea{padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer}
+        button:disabled{opacity:.6;cursor:not-allowed}
+        textarea{cursor:text}
+        .hidden{display:none}
+        .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+        .divider{height:22px;width:1px;background:#eee;margin:0 4px}
+        .user-pill{font-size:12px;color:#111827;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px}
+    </style>
+</head>
+
+<body>
+<header>
+    <h1 style="margin:0">Medical Training</h1>
+    <span class="status" id="status">Connecting to PostgREST…</span>
+
+    <div class="header-actions" style="margin-left:auto">
+        <!-- User + Logout -->
+        <span id="userLabel" class="user-pill hidden"></span>
+        <button id="btnLogout" class="hidden" onclick="logout()">Logout</button>
+
+        <span class="divider"></span>
+
+        <!-- Role (derived from login, locked) -->
+        <label for="roleSelect" class="muted">Role:</label>
+        <select id="roleSelect" disabled>
+            <option value="trainer">Trainer</option>
+            <option value="trainee">Trainee</option>
+        </select>
+
+        <span class="divider"></span>
+
+        <!-- Trainer-only export + tools -->
+        <button onclick="exportPDF()" data-role="trainer">PDF</button>
+        <button onclick="exportCSV()" data-role="trainer">CSV</button>
+        <button onclick="window.location.href='link-editor.html'" data-role="trainer">Link Editor</button>
+        <button onclick="window.open('trace-graph.html','_blank')" data-role="trainer">Open graph view</button>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Left nav -->
+    <aside class="card nav">
+        <button data-tab="risks" class="active">Risks</button>
+        <button data-tab="skills">Skills</button>
+        <button data-tab="materials">Training Materials</button>
+        <button data-tab="trace">Traceability</button>
+        <button data-tab="checks" data-role="trainer">Checks & Reports</button>
+
+        <button data-tab="quiz">Quiz</button>
+        <button data-tab="results">My Results</button>
+    </aside>
+
+    <!-- Right content -->
+    <section class="card panel">
+        <!-- RISKS -->
+        <div id="tab-risks">
+            <div class="toolbar">
+                <input id="qRisk" placeholder="Search risks (code/title)" />
+                <select id="sev">
+                    <option value="">All severity</option>
+                    <option>5</option><option>4</option><option>3</option><option>2</option><option>1</option>
+                </select>
+                <button id="btnRiskReload">Reload</button>
+            </div>
+            <table>
+                <thead><tr><th>Code</th><th>Title</th><th>Severity</th><th>Linked</th></tr></thead>
+                <tbody id="riskRows"><tr><td colspan="4">Loading…</td></tr></tbody>
+            </table>
+            <div class="muted" style="padding:8px">Tip: Open “Traceability” for a roll-up view.</div>
+        </div>
+
+        <!-- SKILLS -->
+        <div id="tab-skills" class="hidden">
+            <div class="toolbar">
+                <input id="qSkill" placeholder="Search skills (code/name)" />
+                <select id="level">
+                    <option value="">All levels</option>
+                    <option>5</option><option>4</option><option>3</option><option>2</option><option>1</option>
+                </select>
+                <button id="btnSkillReload">Reload</button>
+            </div>
+            <table>
+                <thead id="skillHead"><tr><th>Code</th><th>Name</th><th>Level</th><th>Description</th></tr></thead>
+                <tbody id="skillRows"><tr><td colspan="4">Loading…</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- MATERIALS -->
+        <div id="tab-materials" class="hidden">
+            <div class="toolbar">
+                <input id="qMat" placeholder="Search materials (code/title/type)" />
+                <button id="btnMatReload">Reload</button>
+            </div>
+            <table>
+                <thead id="matHead"><tr><th>Code</th><th>Title</th><th>Type</th><th>URL</th><th>Description</th></tr></thead>
+                <tbody id="matRows"><tr><td colspan="5">Loading…</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- TRACEABILITY -->
+        <div id="tab-trace" class="hidden">
+            <div class="muted" style="margin:8px 0">
+                Aggregated from view <code>risk_traceability</code>. (Open this tab first, then export PDF/CSV.)
+            </div>
+            <table>
+                <thead><tr><th>Risk</th><th>Title</th><th>Severity</th><th>Skills</th><th>Materials</th></tr></thead>
+                <tbody id="traceRows"><tr><td colspan="5">Loading…</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- CHECKS -->
+        <div id="tab-checks" class="hidden">
+            <div class="muted" style="margin:8px 0">Data quality checks (uses DB views if present; otherwise falls back to client-side).</div>
+            <table>
+                <thead><tr><th>Check</th><th>Result</th></tr></thead>
+                <tbody id="checkRows"><tr><td colspan="2">Loading…</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- QUIZ -->
+        <div id="tab-quiz" class="hidden">
+            <div class="muted" style="margin:8px 0">
+                Answer the following 5 questions about medical device training. Each correct answer is worth 1 point.
+                <span class="muted">(Auto-scored by keywords; feel free to adjust.)</span>
+            </div>
+            <div id="quizWrap"></div>
+            <div class="toolbar">
+                <button onclick="submitQuiz()">Submit Quiz</button>
+                <button onclick="resetQuiz()">Reset</button>
+            </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div id="tab-results" class="hidden">
+            <div id="resultsBox" class="muted" style="margin:8px 0">No results yet. Complete the quiz first.</div>
+            <div class="toolbar">
+                <button onclick="openTab('quiz')">Go to Quiz</button>
+                <button onclick="clearResults()">Clear Results</button>
+            </div>
+        </div>
+
+    </section>
+</div>
+
+<script>
+    // === API base (change port if PostgREST is on another port) ===
+    const API_BASE = (path) => `http://localhost:3000/${path}`;
+    const $ = s => document.querySelector(s);
+
+    // =========================
+    // Auth gate (LOGIN REQUIRED)
+    // =========================
+    function getCurrentUser(){
+      try { return JSON.parse(localStorage.getItem('mt_user') || 'null'); }
+      catch { return null; }
+    }
+
+    function requireLogin(){
+      const u = getCurrentUser();
+      if (!u || !u.username){
+        window.location.href = 'login.html';
+        return null;
+      }
+      return u;
+    }
+
+    function logout(){
+      localStorage.removeItem('mt_user');
+      window.location.href = 'login.html';
+    }
+
+    let CURRENT_USER = null;
+
+    function applyUserUI(){
+      if (!CURRENT_USER) return;
+
+      // user label + logout visible
+      const userLabel = document.getElementById('userLabel');
+      if (userLabel){
+        userLabel.textContent = `Logged in as: ${CURRENT_USER.username} (${CURRENT_USER.role})`;
+        userLabel.classList.remove('hidden');
+      }
+      const btn = document.getElementById('btnLogout');
+      if (btn) btn.classList.remove('hidden');
+
+      // lock role selector
+      const rs = document.getElementById('roleSelect');
+      if (rs){
+        rs.value = CURRENT_USER.role || 'trainee';
+        rs.disabled = true;
+      }
+    }
+
+    // ===== Role-based UI (trainer-only elements) =====
+    function getRole(){
+      return document.getElementById('roleSelect')?.value || 'trainee';
+    }
+
+    function updateRoleUI(){
+      const role = getRole();
+
+      document.querySelectorAll('[data-role="trainer"]').forEach(el => {
+        el.classList.toggle('hidden', role !== 'trainer');
+      });
+
+      // Prevent trainees from staying on trainer-only tab
+      const activeBtn = document.querySelector('.nav button.active');
+      const activeTab = activeBtn?.dataset?.tab || 'risks';
+      if (role !== 'trainer' && activeTab === 'checks'){
+        openTab('quiz');
+      }
+    }
+
+    // -------- RISKS ----------
+    async function loadRisks(){
+      const rows = $('#riskRows');
+      const qRaw = $('#qRisk').value.trim();
+      const sev = $('#sev').value;
+
+      let url = API_BASE('risk?select=id,code,title,severity');
+      const filters = [];
+      if (qRaw){
+        const q = encodeURIComponent(qRaw);
+        filters.push(`or=(code.ilike.*${q}*,title.ilike.*${q}*)`);
+      }
+      if (sev) filters.push(`severity.eq.${sev}`);
+      if (filters.length) url += '&' + filters.join('&');
+
+      try{
+        const [risksRes, traceRes] = await Promise.all([
+          fetch(url),
+          fetch(API_BASE('risk_traceability'))
+        ]);
+        if(!risksRes.ok) throw new Error('risk '+risksRes.status);
+        if(!traceRes.ok) throw new Error('trace '+traceRes.status);
+
+        const [risks, traces] = await Promise.all([risksRes.json(), traceRes.json()]);
+        const byId = new Map(traces.map(t => [t.id, t]));
+
+        rows.innerHTML = risks.map(r=>{
+          const t = byId.get(r.id)||{};
+          const skills = (t.skills||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join(' ');
+          const mats   = (t.materials||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join(' ');
+          return `<tr>
+            <td>${escapeHtml(r.code)}</td>
+            <td>${escapeHtml(r.title)}</td>
+            <td>${escapeHtml(r.severity)}</td>
+            <td>${skills} ${mats}</td>
+          </tr>`;
+        }).join('') || '<tr><td colspan="4">No results.</td></tr>';
+
+        $('#status').textContent = 'Connected to PostgREST ✓';
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="4">Failed: ${escapeHtml(e.message)}</td></tr>`;
+        $('#status').textContent = 'Connection failed ✗';
+      }
+    }
+
+    // -------- SKILLS ----------
+    async function loadSkills(){
+      const rows = $('#skillRows');
+      const qRaw = $('#qSkill').value.trim();
+      const lv = $('#level').value;
+
+      let url = API_BASE('skill?select=code,name,level,description');
+      const filters = [];
+      if (qRaw){
+        const q = encodeURIComponent(qRaw);
+        filters.push(`or=(code.ilike.*${q}*,name.ilike.*${q}*)`);
+      }
+      if (lv) filters.push(`level.eq.${lv}`);
+      if (filters.length) url += '&' + filters.join('&');
+
+      try{
+        const res = await fetch(url);
+        if(!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        rows.innerHTML = data.map(s=>`<tr>
+          <td>${escapeHtml(s.code)}</td>
+          <td>${escapeHtml(s.name)}</td>
+          <td>${escapeHtml(s.level ?? '')}</td>
+          <td>${escapeHtml(s.description ?? '')}</td>
+        </tr>`).join('') || '<tr><td colspan="4">No skills.</td></tr>';
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="4">Failed: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    // -------- MATERIALS ----------
+    async function loadMaterials(){
+      const rows = $('#matRows');
+      const qRaw = $('#qMat').value.trim();
+
+      let url = API_BASE('training_material?select=code,title,type,url,description');
+      if (qRaw){
+        const q = encodeURIComponent(qRaw);
+        url += `&or=(code.ilike.*${q}*,title.ilike.*${q}*,type.ilike.*${q}*)`;
+      }
+
+      try{
+        const res = await fetch(url);
+        if(!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        rows.innerHTML = data.map(m=>`<tr>
+          <td>${escapeHtml(m.code)}</td>
+          <td>${escapeHtml(m.title)}</td>
+          <td>${escapeHtml(m.type)}</td>
+          <td>${m.url ? `<a href="${escapeAttr(m.url)}" target="_blank" rel="noreferrer">${escapeHtml(m.url)}</a>` : ''}</td>
+          <td>${escapeHtml(m.description ?? '')}</td>
+        </tr>`).join('') || '<tr><td colspan="5">No materials.</td></tr>';
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="5">Failed: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    // -------- TRACEABILITY ----------
+    window._traceData = [];
+
+    async function loadTraceability(){
+      const rows = $('#traceRows');
+      try{
+        const res = await fetch(API_BASE('risk_traceability'));
+        if(!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+
+        window._traceData = Array.isArray(data) ? data : [];
+
+        rows.innerHTML = window._traceData.map(r=>`<tr>
+          <td>${escapeHtml(r.risk)}</td>
+          <td>${escapeHtml(r.title)}</td>
+          <td>${escapeHtml(r.severity)}</td>
+          <td>${(r.skills||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('')||'—'}</td>
+          <td>${(r.materials||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('')||'—'}</td>
+        </tr>`).join('') || '<tr><td colspan="5">No data.</td></tr>';
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="5">Failed: ${escapeHtml(e.message)}</td></tr>`;
+        window._traceData = [];
+      }
+    }
+
+    // -------- CHECKS ----------
+    async function loadChecks(){
+      const rows = $('#checkRows');
+
+      async function tryJson(path){
+        const r = await fetch(API_BASE(path));
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      }
+
+      try{
+        const results = {};
+        try { results.noSkill = await tryJson('v_risks_without_skills'); } catch {}
+        try { results.noMat   = await tryJson('v_risks_without_materials'); } catch {}
+        try { results.orSkill = await tryJson('v_orphan_skills'); } catch {}
+        try { results.orMat   = await tryJson('v_orphan_materials'); } catch {}
+
+        if (results.noSkill || results.noMat || results.orSkill || results.orMat){
+          const chip = list => (list && list.length)
+            ? list.map(x=>`<span class="chip">${escapeHtml(x.code || x)}</span>`).join('') : 'OK';
+          rows.innerHTML = `
+            <tr><td>Risks without linked skills</td><td>${chip(results.noSkill)}</td></tr>
+            <tr><td>Risks without linked materials</td><td>${chip(results.noMat)}</td></tr>
+            <tr><td>Skills not used by any risk</td><td>${chip(results.orSkill)}</td></tr>
+            <tr><td>Materials not linked via any skill</td><td>${chip(results.orMat)}</td></tr>
+          `;
+          return;
+        }
+
+        const [risks, trace, skills, mats] = await Promise.all([
+          tryJson('risk?select=id,code'),
+          tryJson('risk_traceability'),
+          tryJson('skill?select=id,code'),
+          tryJson('training_material?select=id,code'),
+        ]);
+
+        const tById = new Map(trace.map(t=>[t.id,t]));
+        const risksNoSkill = risks.filter(r => (tById.get(r.id)?.skills ?? []).length===0);
+        const risksNoMat   = risks.filter(r => (tById.get(r.id)?.materials ?? []).length===0);
+        const skillSet = new Set(trace.flatMap(t => t.skills ?? []));
+        const matSet   = new Set(trace.flatMap(t => t.materials ?? []));
+        const orphanSkills = skills.filter(s => !skillSet.has(s.code));
+        const orphanMats   = mats.filter(m => !matSet.has(m.code));
+
+        rows.innerHTML = `
+          <tr><td>Risks without linked skills</td><td>${(risksNoSkill.map(x=>`<span class="chip">${escapeHtml(x.code)}</span>`).join('')) || 'OK'}</td></tr>
+          <tr><td>Risks without linked materials</td><td>${(risksNoMat.map(x=>`<span class="chip">${escapeHtml(x.code)}</span>`).join('')) || 'OK'}</td></tr>
+          <tr><td>Skills not used by any risk</td><td>${(orphanSkills.map(x=>`<span class="chip">${escapeHtml(x.code)}</span>`).join('')) || 'OK'}</td></tr>
+          <tr><td>Materials not linked via any skill</td><td>${(orphanMats.map(x=>`<span class="chip">${escapeHtml(x.code)}</span>`).join('')) || 'OK'}</td></tr>
+        `;
+      }catch(e){
+        rows.innerHTML = `<tr><td colspan="2">Failed: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    // ===== Export =====
+    function exportCSV(){
+      if (!window._traceData || window._traceData.length === 0){
+        alert('Please open Traceability tab first to load data.');
+        return;
+      }
+      const headers = ['risk','title','severity','skills','materials'];
+      const lines = [headers.join(',')];
+
+      for (const r of window._traceData){
+        const row = [
+          r.risk ?? '',
+          r.title ?? '',
+          r.severity ?? '',
+          (r.skills ?? []).join('|'),
+          (r.materials ?? []).join('|')
+        ].map(v => `"${String(v).replaceAll('"','""')}"`);
+        lines.push(row.join(','));
+      }
+
+      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'traceability.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function exportPDF(){
+      if (!window._traceData || window._traceData.length === 0){
+        alert('Please open Traceability tab first to load data.');
+        return;
+      }
+      if (!window.jspdf || !window.jspdf.jsPDF){
+        alert('jsPDF not loaded.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'pt', format:'a4' });
+
+      doc.setFontSize(16);
+      doc.text('Traceability Report', 40, 40);
+      doc.setFontSize(10);
+      doc.text('Generated: ' + new Date().toLocaleString(), 40, 58);
+
+      let y = 86;
+      const lineH = 14;
+
+      function addLine(text){
+        const maxW = 515;
+        const lines = doc.splitTextToSize(text, maxW);
+        for (const l of lines){
+          if (y > 780){ doc.addPage(); y = 60; }
+          doc.text(l, 40, y);
+          y += lineH;
+        }
+      }
+
+      window._traceData.forEach((r, idx) => {
+        addLine(`${idx+1}. ${r.risk} | ${r.title} | sev:${r.severity}`);
+        addLine(`   skills: ${(r.skills||[]).join(', ') || '—'}`);
+        addLine(`   materials: ${(r.materials||[]).join(', ') || '—'}`);
+        y += 6;
+      });
+
+      doc.save('traceability.pdf');
+    }
+
+    // ===== Quiz + Results =====
+    const QUIZ_QUESTIONS = [
+      { q: "Why is training documentation important for medical devices?", keywords:["compliance","trace","audit","safety","regulation"] },
+      { q: "What should you do if a device calibration is incorrect?", keywords:["stop","report","recalibrate","maintenance","notify"] },
+      { q: "What is the purpose of linking risks to skills/materials?", keywords:["traceability","coverage","mitigation","evidence","ensure"] },
+      { q: "When should you refresh/update training materials?", keywords:["change","update","new","revision","incident"] },
+      { q: "What is a basic best practice before operating a medical device?", keywords:["check","inspect","procedure","verify","clean"] }
+    ];
+
+    function renderQuiz(){
+      const wrap = $('#quizWrap');
+      wrap.innerHTML = '';
+      QUIZ_QUESTIONS.forEach((it, idx) => {
+        const div = document.createElement('div');
+        div.style.margin = '10px 0';
+        div.innerHTML = `
+          <div><b>Q${idx+1}.</b> ${escapeHtml(it.q)}</div>
+          <textarea id="q_${idx}" style="width:100%;min-height:70px"></textarea>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    function submitQuiz(){
+      const answers = QUIZ_QUESTIONS.map((it, idx) => {
+        const txt = (document.getElementById(`q_${idx}`)?.value || '').toLowerCase();
+        const ok = it.keywords.some(k => txt.includes(k));
+        return { question: it.q, answer: txt, correct: ok, keywords: it.keywords };
+      });
+      const score = answers.filter(a => a.correct).length;
+      const result = { score, total: QUIZ_QUESTIONS.length, answers, time: new Date().toISOString() };
+      localStorage.setItem('quizResult', JSON.stringify(result));
+      alert(`Submitted! Score: ${score}/${QUIZ_QUESTIONS.length}`);
+      openTab('results');
+    }
+
+    function resetQuiz(){
+      QUIZ_QUESTIONS.forEach((_, idx) => {
+        const t = document.getElementById(`q_${idx}`);
+        if (t) t.value = '';
+      });
+    }
+
+    function renderResults(){
+      const box = $('#resultsBox');
+      const raw = localStorage.getItem('quizResult');
+      if (!raw){
+        box.innerHTML = 'No results yet. Complete the quiz first.';
+        return;
+      }
+      const res = JSON.parse(raw);
+      const pct = Math.round((res.score / res.total) * 100);
+
+      let html = `<div><b>Score:</b> ${res.score}/${res.total} (${pct}%)</div>
+                  <div class="muted">Last attempt: ${escapeHtml(new Date(res.time).toLocaleString())}</div><hr/>`;
+
+      res.answers.forEach((a, i) => {
+        html += `<div style="margin:10px 0">
+          <div><b>Q${i+1}:</b> ${escapeHtml(a.question)}</div>
+          <div><b>Your answer:</b> ${escapeHtml(a.answer || '(empty)')}</div>
+          <div><b>Result:</b> ${a.correct ? '✅ Correct' : '❌ Incorrect'}</div>
+          ${a.correct ? '' : `<div class="muted">Expected keywords: ${escapeHtml(a.keywords.join(', '))}</div>`}
+        </div>`;
+      });
+
+      box.innerHTML = html;
+    }
+
+    function clearResults(){
+      localStorage.removeItem('quizResult');
+      renderResults();
+    }
+
+    // ---- Tabs ----
+    function setActive(tab){
+      document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+      ['risks','skills','materials','trace','checks','quiz','results'].forEach(t=>{
+        const el = document.getElementById('tab-'+t);
+        if (!el) return;
+        el.classList.toggle('hidden', t!==tab);
+      });
+    }
+
+    function openTab(tab){
+      const role = getRole();
+      if (role !== 'trainer' && tab === 'checks') tab = 'quiz';
+
+      setActive(tab);
+
+      if (tab==='risks') loadRisks();
+      if (tab==='skills') loadSkills();
+      if (tab==='materials') loadMaterials();
+      if (tab==='trace') loadTraceability();
+      if (tab==='checks') loadChecks();
+      if (tab==='quiz') renderQuiz();
+      if (tab==='results') renderResults();
+
+      updateRoleUI();
+    }
+
+    document.querySelectorAll('.nav button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const tab = btn.dataset.tab;
+        if (!tab) return;
+        openTab(tab);
+      });
+    });
+
+    // Reload buttons
+    $('#btnRiskReload').onclick = loadRisks;
+    $('#btnSkillReload').onclick = loadSkills;
+    $('#btnMatReload').onclick   = loadMaterials;
+
+    function escapeHtml(s){
+      return String(s ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;');
+    }
+    function escapeAttr(s){
+      return String(s ?? '').replaceAll('"','&quot;');
+    }
+
+    // =====================
+    // Initial load
+    // =====================
+    CURRENT_USER = requireLogin();
+    if (CURRENT_USER){
+      // Ensure role exists (fallback to trainee)
+      if (!CURRENT_USER.role) CURRENT_USER.role = 'trainee';
+      applyUserUI();
+      updateRoleUI();
+      openTab('risks');
+    }
+</script>
+</body>
+</html>
