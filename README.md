@@ -54,9 +54,9 @@ Medical-Device-Training/
 
 | Name | Role | Description |
 |------|------|-------------|
-| Yufeng Cai | Developer | System design, backend implementation |
-| Gongcheng Sun | Developer | Frontend development, database design |
-| Jiayin Zhang | Developer | Interface optimization, documentation |
+| Yufeng Cai | Project Leader / Backend & Database Developer | Took the leading role in the project. Proposed key system design ideas and overall architecture. Responsible for backend implementation, database design, and core technical decisions. Coordinated the technical direction of the system. |
+| Gongcheng Sun | Frontend Developer / Feature Implementation | Responsible for implementing system functions. Designed and developed the frontend interface, focusing on user-friendly interaction and clear visual presentation of data and system states. |
+| Jiayin Zhang | Testing & Quality Manager / Code Optimization | Focused on code optimization and testing. Managed testing activities, identified issues, and supported code quality improvements. Also helped manage the project progress and ensured the team followed the planned schedule. |
 
 ---
 
