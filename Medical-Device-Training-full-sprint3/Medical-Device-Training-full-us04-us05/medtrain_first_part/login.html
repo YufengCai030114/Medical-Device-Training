@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login - Medical Training</title>
+    <style>
+        body{font-family:ui-sans-serif,system-ui,Arial;margin:0;background:#fafafa;}
+        .wrap{max-width:420px;margin:70px auto;padding:0 14px;}
+        .card{background:#fff;border:1px solid #eee;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.03);padding:16px;}
+        h1{margin:0 0 8px;font-size:22px;}
+        .muted{color:#777;font-size:12px;margin:0 0 12px;}
+        label{display:block;font-size:12px;color:#444;margin:10px 0 6px;}
+        input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;box-sizing:border-box;}
+        button{width:100%;margin-top:12px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#111827;color:#fff;cursor:pointer;}
+        button:disabled{opacity:.6;cursor:not-allowed;}
+        .err{margin-top:10px;padding:10px;border:1px solid #fecaca;background:#fff1f2;color:#991b1b;border-radius:10px;display:none;white-space:pre-wrap;}
+        .row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:10px;flex-wrap:wrap;}
+        a{color:#2563eb;text-decoration:none;font-size:13px;}
+        a:hover{text-decoration:underline;}
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="card">
+        <h1>Login</h1>
+        <p class="muted">
+            Use your username and password.
+            (Role is taken from DB: <b>admin / trainer / trainee</b>.)
+        </p>
+
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input id="username" autocomplete="username" required />
+
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" required />
+
+            <button id="btnLogin" type="submit">Sign in</button>
+        </form>
+
+        <div id="err" class="err"></div>
+
+        <div class="row">
+            <a href="register.html">Create an account</a>
+            <a href="simple-interface-prototype-fetch.html" onclick="return false;" style="opacity:.6;pointer-events:none;">
+                (App requires login)
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const $ = (s) => document.querySelector(s);
+
+    // ---- helper: decide which PostgREST to call based on role in localStorage ----
+    function getApiOriginForCurrentRole() {
+      // admin/trainer use 3001; trainee uses 3000
+      try {
+        const u = JSON.parse(localStorage.getItem('mt_user') || 'null');
+        const role = (u && u.role) ? String(u.role).toLowerCase() : '';
+        if (role === 'admin' || role === 'trainer') return 'http://localhost:3001';
+      } catch {}
+      return 'http://localhost:3000';
+    }
+
+    // login should try BOTH endpoints because before login we may not know the role yet
+    const ORIGINS_TO_TRY = ['http://localhost:3001', 'http://localhost:3000'];
+
+    function showError(msg){
+      const el = $('#err');
+      el.textContent = String(msg || 'Unknown error');
+      el.style.display = 'block';
+    }
+    function hideError(){
+      const el = $('#err');
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+    function setLoading(isLoading){
+      const btn = $('#btnLogin');
+      btn.disabled = isLoading;
+      btn.textContent = isLoading ? 'Signing in…' : 'Sign in';
+    }
+
+    async function postRpcLogin(origin, payload){
+      return fetch(`${origin}/rpc/login_user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type':'application/json',
+          'Accept':'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    async function tryLoginOnOrigin(origin, username, password) {
+      // ① try p_identifier
+      let res = await postRpcLogin(origin, { p_identifier: username, p_password: password });
+
+      // ② if 404, fallback to p_username
+      if (res.status === 404) {
+        res = await postRpcLogin(origin, { p_username: username, p_password: password });
+      }
+
+      if (!res.ok) {
+        const txt = await res.text().catch(()=> '');
+        throw new Error(`(${origin}) HTTP ${res.status}` + (txt ? `\n${txt}` : ''));
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) return null;
+      return data[0];
+    }
+
+    // ✅ Final login: role comes from DB (row.role)
+    async function doLogin(username, password){
+      hideError();
+      setLoading(true);
+
+      try{
+        let row = null;
+        let usedOrigin = null;
+        let lastErr = null;
+
+        // Try both PostgREST endpoints: admin/trainer first, then trainee
+        for (const origin of ORIGINS_TO_TRY) {
+          try {
+            const r = await tryLoginOnOrigin(origin, username, password);
+            if (r) {
+              row = r;
+              usedOrigin = origin;
+              break;
+            }
+          } catch (e) {
+            lastErr = e;
+            // continue trying next origin
+          }
+        }
+
+        if (!row) {
+          // if both succeeded but returned empty => wrong credentials
+          // if lastErr exists => show better debug message
+          if (lastErr) console.error(lastErr);
+          showError('Invalid username or password.');
+          return;
+        }
+
+        // ✅ role MUST come from DB
+        const roleFromDb = String(row.role || '').toLowerCase();
+        const role = (roleFromDb === 'admin' || roleFromDb === 'trainer' || roleFromDb === 'trainee')
+          ? roleFromDb
+          : 'trainee'; // safe fallback
+
+        localStorage.setItem('mt_user', JSON.stringify({
+          id: row.id,
+          username: row.username,
+          role
+        }));
+
+        // Optional: also store role separately if other pages use it
+        localStorage.setItem('role', role);
+
+        // If you want to force-refresh API origin logic elsewhere:
+        // console.log('Logged in via', usedOrigin, 'role=', role);
+
+        // go to app
+        window.location.href = 'simple-interface-prototype-fetch.html';
+      } catch (err){
+        console.error(err);
+        showError('Login error: ' + (err?.message || String(err)));
+      } finally{
+        setLoading(false);
+      }
+    }
+
+    // If already logged in, go to app
+    (function(){
+      try{
+        const u = JSON.parse(localStorage.getItem('mt_user') || 'null');
+        if (u && u.username){
+          window.location.href = 'simple-interface-prototype-fetch.html';
+        }
+      } catch {}
+    })();
+
+    // submit
+    $('#loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = $('#username').value.trim();
+      const password = $('#password').value;
+      if (!username || !password){
+        showError('Please enter username and password.');
+        return;
+      }
+      doLogin(username, password);
+    });
+</script>
+</body>
+</html>

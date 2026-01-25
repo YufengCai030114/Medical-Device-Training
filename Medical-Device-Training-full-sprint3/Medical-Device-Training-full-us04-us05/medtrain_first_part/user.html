@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Users - Admin</title>
+    <style>
+        body{font-family:ui-sans-serif,system-ui,Arial;margin:0;background:#fafafa;}
+        .wrap{max-width:980px;margin:28px auto;padding:0 14px;}
+        .card{background:#fff;border:1px solid #eee;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.03);padding:16px;}
+        h1{margin:0 0 10px;font-size:20px;}
+        .muted{color:#666;font-size:12px;margin:0 0 12px;}
+        table{width:100%;border-collapse:collapse;}
+        th,td{padding:10px;border-bottom:1px solid #f0f0f0;text-align:left;font-size:13px;}
+        th{background:#fafafa;font-weight:600;}
+        select{padding:7px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;}
+        button{padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;background:#111827;color:#fff;cursor:pointer;}
+        button:disabled{opacity:.6;cursor:not-allowed;}
+        .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px;}
+        .err{margin-top:10px;padding:10px;border:1px solid #fecaca;background:#fff1f2;color:#991b1b;border-radius:10px;display:none;white-space:pre-wrap;}
+        a{color:#2563eb;text-decoration:none;font-size:13px;}
+        a:hover{text-decoration:underline;}
+        .pill{display:inline-block;padding:2px 8px;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;background:#fff;}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <div class="row">
+            <div>
+                <h1>User Management</h1>
+                <p class="muted">Admin only: list users and change roles.</p>
+            </div>
+            <div class="row" style="margin:0;">
+                <a href="simple-interface-prototype-fetch.html">← Back to App</a>
+                <button id="btnReload">Reload</button>
+            </div>
+        </div>
+
+        <div id="me" class="muted"></div>
+        <div id="err" class="err"></div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Current role</th>
+                <th>Change to</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const $ = (s) => document.querySelector(s);
+
+    function showErr(msg){
+      const el = $('#err');
+      el.textContent = String(msg || 'Unknown error');
+      el.style.display = 'block';
+    }
+    function hideErr(){
+      const el = $('#err');
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+
+    function getUser(){
+      try { return JSON.parse(localStorage.getItem('mt_user') || 'null'); } catch { return null; }
+    }
+
+    function requireAdmin(){
+      const u = getUser();
+      if (!u || !u.username) {
+        location.href = 'login.html';
+        return null;
+      }
+      const role = String(u.role || '').toLowerCase();
+      $('#me').innerHTML = `Logged in as: <span class="pill">${u.username}</span> role: <span class="pill">${role}</span>`;
+      if (role !== 'admin') {
+        showErr('Access denied. Admin only.');
+        // Optional: redirect back
+        // setTimeout(()=> location.href='simple-interface-prototype-fetch.html', 1200);
+        return null;
+      }
+      return u;
+    }
+
+    // Admin uses PostgREST on 3001
+    const API = (path) => `http://localhost:3001/${path}`;
+
+    async function fetchUsers(){
+      hideErr();
+      const res = await fetch(API('user?select=id,username,role&order=id.asc'), {
+        headers: { 'Accept':'application/json' }
+      });
+      if (!res.ok) throw new Error('Load users failed: HTTP ' + res.status + '\n' + await res.text().catch(()=> ''));
+      return res.json();
+    }
+
+    async function updateUserRole(id, role){
+      // PATCH /user?id=eq.X  body: { role: 'trainer' }
+      const res = await fetch(API(`user?id=eq.${encodeURIComponent(id)}`), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type':'application/json',
+          'Accept':'application/json',
+          // Prefer return representation to confirm
+          'Prefer':'return=representation'
+        },
+        body: JSON.stringify({ role })
+      });
+      if (!res.ok) throw new Error('Update failed: HTTP ' + res.status + '\n' + await res.text().catch(()=> ''));
+      const data = await res.json().catch(()=> []);
+      return data;
+    }
+
+    function roleOptionsHtml(selected){
+      const roles = ['admin','trainer','trainee'];
+      return roles.map(r => `<option value="${r}" ${r===selected?'selected':''}>${r}</option>`).join('');
+    }
+
+    function render(users){
+      const tbody = $('#tbody');
+      tbody.innerHTML = '';
+
+      users.forEach(u => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${u.id}</td>
+          <td>${u.username}</td>
+          <td><span class="pill">${u.role}</span></td>
+          <td>
+            <select data-id="${u.id}">
+              ${roleOptionsHtml(u.role)}
+            </select>
+          </td>
+          <td>
+            <button data-save="${u.id}">Save</button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      // bind save buttons
+      tbody.querySelectorAll('button[data-save]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          hideErr();
+          const id = btn.getAttribute('data-save');
+          const sel = tbody.querySelector(`select[data-id="${id}"]`);
+          const newRole = sel.value;
+
+          btn.disabled = true;
+          btn.textContent = 'Saving…';
+
+          try{
+            await updateUserRole(id, newRole);
+            await load(); // reload after save
+          } catch(e){
+            console.error(e);
+            showErr(e.message || String(e));
+          } finally{
+            btn.disabled = false;
+            btn.textContent = 'Save';
+          }
+        });
+      });
+    }
+
+    async function load(){
+      const admin = requireAdmin();
+      if (!admin) return;
+
+      $('#btnReload').disabled = true;
+      try{
+        const users = await fetchUsers();
+        render(users);
+      } catch(e){
+        console.error(e);
+        showErr(e.message || String(e));
+      } finally{
+        $('#btnReload').disabled = false;
+      }
+    }
+
+    $('#btnReload').addEventListener('click', load);
+    load();
+</script>
+</body>
+</html>
