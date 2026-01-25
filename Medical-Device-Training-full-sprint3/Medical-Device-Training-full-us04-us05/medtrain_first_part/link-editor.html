@@ -405,6 +405,18 @@
       function goBack() {
     window.location.href = 'simple-interface-prototype-fetch.html';
   }
+  (function () {
+    let role = 'trainee';
+    try {
+      role = (JSON.parse(localStorage.getItem('mt_user') || 'null')?.role || 'trainee')
+        .toLowerCase().trim();
+    } catch {}
+
+    if (role !== 'trainer') {
+      alert('Trainer only.');
+      window.location.href = 'simple-interface-prototype-fetch.html';
+    }
+  })();
 </script>
 </body>
 </html>

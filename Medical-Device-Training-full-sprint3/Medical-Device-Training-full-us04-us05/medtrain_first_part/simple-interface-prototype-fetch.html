@@ -50,7 +50,7 @@
         <button onclick="exportPDF()" data-role="export">PDF</button>
         <button onclick="exportCSV()" data-role="export">CSV</button>
         <!-- Trainer-only tools -->
-        <button onclick="window.location.href='link-editor.html'" data-role="trainer">Link Editor</button>
+        <button onclick="window.location.href='link-editor.html'" data-role="trainer admin">Link Editor</button>
         <button onclick="window.open('trace-graph.html','_blank')">Open graph view</button>
         <!-- Admin-only tools -->
         <button onclick="window.location.href='user.html'" data-role="admin">Users</button>
@@ -230,9 +230,19 @@
        const activeTab = activeBtn?.dataset?.tab || 'risks';
 
        // trainer-only elements
-       document.querySelectorAll('[data-role="trainer"]').forEach(el => {
-          el.classList.toggle('hidden', role !== 'trainer');
-       });
+        function updateRoleUI() {
+  const role = JSON.parse(localStorage.getItem('mt_user') || 'null')?.role || 'trainee';
+
+  document.querySelectorAll('[data-role]').forEach(el => {
+    const tokens = (el.getAttribute('data-role') || '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    const allowed = tokens.includes(role);
+    el.classList.toggle('hidden', !allowed);
+  });
+}
 
        // export buttons:
        // trainer always sees them
